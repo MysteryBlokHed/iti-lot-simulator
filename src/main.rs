@@ -121,6 +121,32 @@ fn par_simulate_capacity(capacity: usize, cars_per_hour: f32, continuous: bool, 
     (final_size_sum as f32) / (RUNS_PER_SIZE as f32)
 }
 
+fn binary_search_simulate(cli: &cli::Cli) -> usize {
+    // Start by doubling the tested capacity until we reach one that works
+    let mut upper_bound = 1usize;
+    loop {
+        let average =
+            par_simulate_capacity(upper_bound, cli.cars_per_hour, cli.continuous, cli.skew);
+        if average <= THRESHOLD {
+            break;
+        }
+        upper_bound *= 2;
+    }
+
+    let lower_bound = upper_bound >> 1;
+
+    // TODO: actually use binary search here instead of just going in order.
+    // This code is copied from `par_simulate` above, with the initial iterator value modified
+    let smallest = Arc::new(Mutex::new(usize::MAX));
+    let iter = IterUntilDone::new(lower_bound..);
+    let done = iter.done.clone();
+
+    iter.par_bridge()
+        .for_each(|capacity| par_simulate_inner(cli, smallest.clone(), done.clone(), capacity));
+
+    *smallest.lock().unwrap()
+}
+
 fn main() {
     let cli = cli::Cli::parse();
     assert!(
@@ -130,9 +156,15 @@ fn main() {
 
     let start_time = Instant::now();
 
-    let capacity = par_simulate(&cli);
+    let capacity = if !cli.binary_search {
+        par_simulate(&cli)
+    } else {
+        binary_search_simulate(&cli)
+    };
+
     let end_time = Instant::now();
     let runtime = end_time - start_time;
+
     eprintln!(
         "\nSIMULATION IS COMPLETE!\nThe smallest number of parking spots required: {capacity}\nTotal execution time: {:.3} seconds",
         runtime.as_secs_f32(),
