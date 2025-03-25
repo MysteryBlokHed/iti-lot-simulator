@@ -1,7 +1,7 @@
 use clap::Parser;
 
 #[derive(Parser)]
-#[command(version, about = "Rust rewrite of ITI 1121 assignment 3.", long_about = None)]
+#[command(version, about = "A Rust reimplementation of one of my assignments.", long_about = None)]
 pub struct Cli {
     #[arg(help = "The number of cars that should enter the lot per hour. Must be positive.")]
     pub cars_per_hour: f32,
