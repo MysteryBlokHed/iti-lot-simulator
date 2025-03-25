@@ -18,4 +18,10 @@ pub struct Cli {
         help = "For use with --continuous. Determines whether the random number generator should be skewed to somewhat match the incorrect discrete probabilities."
     )]
     pub skew: bool,
+    #[arg(
+        short,
+        long,
+        help = "Uses a binary search approach to determine the best capacity, instead of just increasing by one constantly."
+    )]
+    pub binary_search: bool,
 }

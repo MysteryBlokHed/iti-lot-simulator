@@ -121,6 +121,43 @@ fn par_simulate_capacity(capacity: usize, cars_per_hour: f32, continuous: bool, 
     (final_size_sum as f32) / (RUNS_PER_SIZE as f32)
 }
 
+fn binary_search_simulate(cli: &cli::Cli) -> usize {
+    // Start by doubling the tested capacity until we reach one that works
+    let mut upper_bound = 1usize;
+    loop {
+        let average =
+            par_simulate_capacity(upper_bound, cli.cars_per_hour, cli.continuous, cli.skew);
+        if average <= THRESHOLD {
+            break;
+        }
+        upper_bound <<= 1;
+    }
+
+    let lower_bound = (upper_bound >> 1) + 1;
+
+    // Binary search
+    let mut low = lower_bound;
+    let mut high = upper_bound;
+    let mut mid = 0;
+
+    while low <= high {
+        mid = (high + low) / 2;
+        // Run the simulation
+        let average = par_simulate_capacity(mid, cli.cars_per_hour, cli.continuous, cli.skew);
+        let too_high = average <= THRESHOLD;
+
+        // Try smaller capacities if we overestimated, larger if we underestimated
+        if too_high {
+            high = mid - 1;
+        } else {
+            low = mid + 1;
+        }
+    }
+
+    // Whatever our `mid` value is at the end of the loop is the result
+    mid
+}
+
 fn main() {
     let cli = cli::Cli::parse();
     assert!(
@@ -130,9 +167,15 @@ fn main() {
 
     let start_time = Instant::now();
 
-    let capacity = par_simulate(&cli);
+    let capacity = if !cli.binary_search {
+        par_simulate(&cli)
+    } else {
+        binary_search_simulate(&cli)
+    };
+
     let end_time = Instant::now();
     let runtime = end_time - start_time;
+
     eprintln!(
         "\nSIMULATION IS COMPLETE!\nThe smallest number of parking spots required: {capacity}\nTotal execution time: {:.3} seconds",
         runtime.as_secs_f32(),
