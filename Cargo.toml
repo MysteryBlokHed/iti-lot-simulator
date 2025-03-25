@@ -6,6 +6,7 @@ authors = ["Adam Thompson-Sharpe <adamthompsonsharpe@gmail.com>"]
 edition = "2024"
 readme = "README.md"
 license = "GPL-3.0"
+publish = false
 
 [dependencies]
 clap = { version = "4.5.32", features = ["derive"] }
