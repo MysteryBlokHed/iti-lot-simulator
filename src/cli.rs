@@ -8,6 +8,21 @@ pub struct Cli {
     #[arg(
         short,
         long,
+        help = "The number of runs to do per capacity. More runs will take longer but produce more stable results.",
+        default_value_t = 10,
+        value_parser = clap::value_parser!(u32).range(1..)
+    )]
+    pub runs: u32,
+    #[arg(
+        short,
+        long,
+        help = "The maximum number of cars that are allowed to be waiting to enter in order for a capacity to be considered acceptable.",
+        default_value_t = 5.0
+    )]
+    pub threshold: f32,
+    #[arg(
+        short,
+        long,
         help = "Use a continuous probability sampling method that is faster and actually correct."
     )]
     pub continuous: bool,

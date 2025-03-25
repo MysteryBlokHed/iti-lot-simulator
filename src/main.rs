@@ -22,8 +22,6 @@ mod random_generator;
 mod simulator;
 mod triangular_distribution;
 
-const RUNS_PER_SIZE: u32 = 10;
-const THRESHOLD: f32 = 5.0;
 pub const MAX_CAPACITY: usize = 512;
 
 /// An iterator that simply returns the results of the iterator it wraps,
@@ -66,8 +64,8 @@ fn par_simulate_inner(
     done: Arc<RwLock<bool>>,
     capacity: usize,
 ) {
-    let average = par_simulate_capacity(capacity, cli.cars_per_hour, cli.continuous, cli.skew);
-    if average <= THRESHOLD {
+    let average = par_simulate_capacity(capacity, cli.cars_per_hour, cli.continuous, cli.skew, cli.runs);
+    if average <= cli.threshold {
         *done.write().unwrap() = true;
         let mut smallest = smallest.lock().unwrap();
         if capacity < *smallest {
@@ -87,7 +85,13 @@ fn par_simulate(cli: &cli::Cli) -> usize {
     *smallest.lock().unwrap()
 }
 
-fn par_simulate_capacity(capacity: usize, cars_per_hour: f32, continuous: bool, skew: bool) -> f32 {
+fn par_simulate_capacity(
+    capacity: usize,
+    cars_per_hour: f32,
+    continuous: bool,
+    skew: bool,
+    runs_per_size: u32,
+) -> f32 {
     let inner_loop = |rng: &mut rand::rngs::ThreadRng, i: u32| {
         let mut sim = Simulator::new(
             VecParkingLot::new(capacity),
@@ -113,21 +117,26 @@ fn par_simulate_capacity(capacity: usize, cars_per_hour: f32, continuous: bool, 
         cars_left
     };
 
-    let final_size_sum = (1..=RUNS_PER_SIZE)
+    let final_size_sum = (1..=runs_per_size)
         .into_par_iter()
         .map_init(rand::rng, inner_loop)
         .sum::<usize>();
 
-    (final_size_sum as f32) / (RUNS_PER_SIZE as f32)
+    (final_size_sum as f32) / (runs_per_size as f32)
 }
 
 fn binary_search_simulate(cli: &cli::Cli) -> usize {
     // Start by doubling the tested capacity until we reach one that works
     let mut upper_bound = 1usize;
     loop {
-        let average =
-            par_simulate_capacity(upper_bound, cli.cars_per_hour, cli.continuous, cli.skew);
-        if average <= THRESHOLD {
+        let average = par_simulate_capacity(
+            upper_bound,
+            cli.cars_per_hour,
+            cli.continuous,
+            cli.skew,
+            cli.runs,
+        );
+        if average <= cli.threshold {
             break;
         }
         upper_bound <<= 1;
@@ -143,8 +152,9 @@ fn binary_search_simulate(cli: &cli::Cli) -> usize {
     while low <= high {
         mid = (high + low) / 2;
         // Run the simulation
-        let average = par_simulate_capacity(mid, cli.cars_per_hour, cli.continuous, cli.skew);
-        let too_high = average <= THRESHOLD;
+        let average =
+            par_simulate_capacity(mid, cli.cars_per_hour, cli.continuous, cli.skew, cli.runs);
+        let too_high = average <= cli.threshold;
 
         // Try smaller capacities if we overestimated, larger if we underestimated
         if too_high {
@@ -163,6 +173,10 @@ fn main() {
     assert!(
         cli.cars_per_hour > 0.0,
         "There must be a positive number of cars per hour."
+    );
+    assert!(
+        cli.threshold > 0.0,
+        "The threshold must be a positive number."
     );
 
     let start_time = Instant::now();
