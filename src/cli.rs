@@ -21,7 +21,6 @@ pub struct Cli {
     #[arg(
         short,
         long,
-        conflicts_with = "continuous",
         help = "Uses a binary search approach to determine the best capacity, instead of just increasing by one constantly."
     )]
     pub binary_search: bool,
