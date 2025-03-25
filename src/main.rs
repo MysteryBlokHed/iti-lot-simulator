@@ -130,21 +130,32 @@ fn binary_search_simulate(cli: &cli::Cli) -> usize {
         if average <= THRESHOLD {
             break;
         }
-        upper_bound *= 2;
+        upper_bound <<= 1;
     }
 
-    let lower_bound = upper_bound >> 1;
+    let lower_bound = (upper_bound >> 1) + 1;
 
-    // TODO: actually use binary search here instead of just going in order.
-    // This code is copied from `par_simulate` above, with the initial iterator value modified
-    let smallest = Arc::new(Mutex::new(usize::MAX));
-    let iter = IterUntilDone::new(lower_bound..);
-    let done = iter.done.clone();
+    // Binary search
+    let mut low = lower_bound;
+    let mut high = upper_bound;
+    let mut mid = 0;
 
-    iter.par_bridge()
-        .for_each(|capacity| par_simulate_inner(cli, smallest.clone(), done.clone(), capacity));
+    while low <= high {
+        mid = (high + low) / 2;
+        // Run the simulation
+        let average = par_simulate_capacity(mid, cli.cars_per_hour, cli.continuous, cli.skew);
+        let too_high = average <= THRESHOLD;
 
-    *smallest.lock().unwrap()
+        // Try smaller capacities if we overestimated, larger if we underestimated
+        if too_high {
+            high = mid - 1;
+        } else {
+            low = mid + 1;
+        }
+    }
+
+    // Whatever our `mid` value is at the end of the loop is the result
+    mid
 }
 
 fn main() {
