@@ -1,0 +1,13 @@
+[package]
+version = "0.1.0"
+name = "iti-lot-simulator"
+description = "A Rust reimplementation of one of my assignments."
+authors = ["Adam Thompson-Sharpe <adamthompsonsharpe@gmail.com>"]
+edition = "2024"
+readme = "README.md"
+license = "GPL-3.0"
+
+[dependencies]
+clap = { version = "4.5.32", features = ["derive"] }
+rand = "0.9.0"
+rayon = "1.10.0"
