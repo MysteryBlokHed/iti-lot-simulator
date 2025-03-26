@@ -11,12 +11,34 @@ the entire repository for that class's work.
 
 ## Description
 
-The program takes in an average number of cars per hour from the command line.
-It then simulates a parking lot over the course of 24 hours,
-using discrete probability calculations to determine when cars arrive and leave the lot.
+The task is to implement a parking lot simulator that determines the minimum viable lot size
+given some average number of cars entering the lot per hour.
+The lot is simulated over the course of 24 hours, using one-second ticks.
 
-The original assignment had stipulations about the implementation
-that I am not enforcing here for the sake of performance.
+The time that a car leaves the lot is determined by a [triangular distribution](https://en.wikipedia.org/wiki/Triangular_distribution),
+where $`a = 0, c = \frac{\textrm{max stay}}{2}, b = \textrm{max stay}`$.  
+The max stay is 8 hours by default.
+
+The code that is prescribed to be run each tick is:
+
+1. Generate a random number to determine if a car should join the queue
+   (done by comparing a random number to the ratio $`\frac{\textrm{hourly cars}}{3600 \textrm{ seconds}}`$.
+   - If the rng returns true, add a car to the incoming queue.
+2. For each car currently in the lot:
+   - Determine if the car should leave the lot by:
+     1. Checking if the car has been there for the max duration; or
+     2. Generating a random number and comparing it to the triangular PDF at the duration the car has been parked.
+   - If a car should leave the lot, remove it from the parked cars list and move it to the outgoing cars queue.  
+3. If the outgoing queue is not empty, pop one car.
+4. If the incoming queue is not empty, and there is space in the lot, move a car from the queue to the parked cars list.
+
+The default version of my code (no flags) is functionally identical to this description,
+but I have made some optimizations such as parallelizing the capacity checks,
+replacing the incoming queue with an integer counter,
+and removing the outgoing queue entirely.
+
+Other performance optimizations may cause varying amounts of divergence from this implementation,
+most notably with the `-c` flag described below.
 
 ### Probability Errors
 
@@ -24,6 +46,7 @@ It's worth noting that the simulator as described in the assignment is actually 
 since it causes cars to leave disproportionately later than the distribution should imply.
 
 A continuous flag (`-c`) is available for a more performant and more correct simulation.
+Since the cars leave at the proper time, the calculated lot size will be smaller than the default version.
 The RNG for this version can be skewed (`-s`) to somewhat replicate the distribution
 of the original probability method.
 
