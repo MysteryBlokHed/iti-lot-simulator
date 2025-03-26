@@ -56,6 +56,8 @@ Options:
   -c, --continuous             Use a continuous probability sampling method that is faster and actually correct.
   -s, --skew                   For use with --continuous. Determines whether the random number generator should be skewed to somewhat match the incorrect discrete probabilities.
   -b, --binary-search          Uses a binary search approach to determine the best capacity, instead of just increasing by one constantly.
+  -m, --max-stay <MAX_STAY>    The maximum amount of time a car will stay in the lot, in seconds. Defaults to 8 hours. [default: 28800]
+  -d, --duration <DURATION>    The duration of time to simulate the lot for, in seconds. Defaults to 24 hours. [default: 86400]
   -h, --help                   Print help
   -V, --version                Print version
 ```

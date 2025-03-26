@@ -38,6 +38,7 @@ pub struct Cli {
         long,
         help = "Uses a binary search approach to determine the best capacity, instead of just increasing by one constantly."
     )]
+    pub binary_search: bool,
     #[arg(
         short,
         long,
@@ -45,5 +46,11 @@ pub struct Cli {
         default_value_t = 28800
     )]
     pub max_stay: u32,
-    pub binary_search: bool,
+    #[arg(
+        short,
+        long,
+        help = "The duration of time to simulate the lot for, in seconds. Defaults to 24 hours.",
+        default_value_t = 86400
+    )]
+    pub duration: u32,
 }

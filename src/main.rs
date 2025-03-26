@@ -90,8 +90,8 @@ fn par_simulate_capacity(capacity: usize, cli: &cli::Cli) -> f32 {
         let mut sim = Simulator::new(
             VecParkingLot::new(capacity),
             // ArrayParkingLot::new(capacity),
-            8 * 3600,
-            24 * 3600,
+            cli.max_stay,
+            cli.duration,
             cli.cars_per_hour,
             cli.continuous,
             cli.skew,
