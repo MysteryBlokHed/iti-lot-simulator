@@ -38,5 +38,12 @@ pub struct Cli {
         long,
         help = "Uses a binary search approach to determine the best capacity, instead of just increasing by one constantly."
     )]
+    #[arg(
+        short,
+        long,
+        help = "The maximum amount of time a car will stay in the lot, in seconds. Defaults to 8 hours.",
+        default_value_t = 28800
+    )]
+    pub max_stay: u32,
     pub binary_search: bool,
 }

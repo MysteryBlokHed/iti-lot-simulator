@@ -64,7 +64,7 @@ fn par_simulate_inner(
     done: Arc<RwLock<bool>>,
     capacity: usize,
 ) {
-    let average = par_simulate_capacity(capacity, cli.cars_per_hour, cli.continuous, cli.skew, cli.runs);
+    let average = par_simulate_capacity(capacity, cli);
     if average <= cli.threshold {
         *done.write().unwrap() = true;
         let mut smallest = smallest.lock().unwrap();
@@ -85,22 +85,16 @@ fn par_simulate(cli: &cli::Cli) -> usize {
     *smallest.lock().unwrap()
 }
 
-fn par_simulate_capacity(
-    capacity: usize,
-    cars_per_hour: f32,
-    continuous: bool,
-    skew: bool,
-    runs_per_size: u32,
-) -> f32 {
+fn par_simulate_capacity(capacity: usize, cli: &cli::Cli) -> f32 {
     let inner_loop = |rng: &mut rand::rngs::ThreadRng, i: u32| {
         let mut sim = Simulator::new(
             VecParkingLot::new(capacity),
             // ArrayParkingLot::new(capacity),
             8 * 3600,
             24 * 3600,
-            cars_per_hour,
-            continuous,
-            skew,
+            cli.cars_per_hour,
+            cli.continuous,
+            cli.skew,
         );
         let start = Instant::now();
         sim.simulate(rng);
@@ -117,25 +111,19 @@ fn par_simulate_capacity(
         cars_left
     };
 
-    let final_size_sum = (1..=runs_per_size)
+    let final_size_sum = (1..=cli.runs)
         .into_par_iter()
         .map_init(rand::rng, inner_loop)
         .sum::<usize>();
 
-    (final_size_sum as f32) / (runs_per_size as f32)
+    (final_size_sum as f32) / (cli.runs as f32)
 }
 
 fn binary_search_simulate(cli: &cli::Cli) -> usize {
     // Start by doubling the tested capacity until we reach one that works
     let mut upper_bound = 1usize;
     loop {
-        let average = par_simulate_capacity(
-            upper_bound,
-            cli.cars_per_hour,
-            cli.continuous,
-            cli.skew,
-            cli.runs,
-        );
+        let average = par_simulate_capacity(upper_bound, cli);
         if average <= cli.threshold {
             break;
         }
@@ -147,13 +135,12 @@ fn binary_search_simulate(cli: &cli::Cli) -> usize {
     // Binary search
     let mut low = lower_bound;
     let mut high = upper_bound;
-    let mut mid = 0;
+    let mut mid;
 
     while low <= high {
         mid = (high + low) / 2;
         // Run the simulation
-        let average =
-            par_simulate_capacity(mid, cli.cars_per_hour, cli.continuous, cli.skew, cli.runs);
+        let average = par_simulate_capacity(mid, cli);
         let too_high = average <= cli.threshold;
 
         // Try smaller capacities if we overestimated, larger if we underestimated
