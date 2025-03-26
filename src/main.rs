@@ -60,8 +60,8 @@ impl<I: Iterator<Item = usize>> Iterator for IterUntilDone<I> {
 
 fn par_simulate_inner(
     cli: &cli::Cli,
-    smallest: Arc<Mutex<usize>>,
-    done: Arc<RwLock<bool>>,
+    smallest: &Arc<Mutex<usize>>,
+    done: &Arc<RwLock<bool>>,
     capacity: usize,
 ) {
     let average = par_simulate_capacity(capacity, cli);
@@ -80,7 +80,7 @@ fn par_simulate(cli: &cli::Cli) -> usize {
     let done = iter.done.clone();
 
     iter.par_bridge()
-        .for_each(|capacity| par_simulate_inner(cli, smallest.clone(), done.clone(), capacity));
+        .for_each(|capacity| par_simulate_inner(cli, &smallest.clone(), &done.clone(), capacity));
 
     *smallest.lock().unwrap()
 }
@@ -168,10 +168,10 @@ fn main() {
 
     let start_time = Instant::now();
 
-    let capacity = if !cli.binary_search {
-        par_simulate(&cli)
-    } else {
+    let capacity = if cli.binary_search {
         binary_search_simulate(&cli)
+    } else {
+        par_simulate(&cli)
     };
 
     let end_time = Instant::now();
