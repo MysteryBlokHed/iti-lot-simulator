@@ -151,8 +151,8 @@ fn binary_search_simulate(cli: &cli::Cli) -> usize {
         }
     }
 
-    // Whatever our `mid` value is at the end of the loop is the result
-    mid
+    // Whatever our `low` value is at the end of the loop is the result
+    low
 }
 
 fn main() {
