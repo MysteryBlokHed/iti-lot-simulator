@@ -104,6 +104,16 @@ The smallest number of parking spots required: 57
 Total execution time: 0.029 seconds
 ```
 
+## Benchmarks
+
+If you want to see how the different versions compare, you can use `cargo bench`.
+To see all available benchmarks, run `cargo bench -- --list`.
+
+Run `cargo bench defaults/` to see how the five basic variations (i.e. `--faithful`, no flags, `-c`, `-b`, and `-bc`)
+compare for 3 cars per hour.
+
+Run `cargo bench fifty/` to see how the versions other than faithful compare for 50 cars per hour.
+
 ## License
 
 This project is licensed under the GNU General Public License, Version 3.0
