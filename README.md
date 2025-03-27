@@ -36,6 +36,7 @@ The default version of my code (no flags) is functionally identical to this desc
 but I have made some optimizations such as parallelizing the capacity checks,
 replacing the incoming queue with an integer counter,
 and removing the outgoing queue entirely.
+If an implementation that is written as described above is desired, use the `--faithful` flag.
 
 Other performance optimizations may cause varying amounts of divergence from this implementation,
 most notably with the `-c` flag described below.
@@ -81,6 +82,8 @@ Options:
   -b, --binary-search          Uses a binary search approach to determine the best capacity, instead of just increasing by one constantly.
   -m, --max-stay <MAX_STAY>    The maximum amount of time a car will stay in the lot, in seconds. Defaults to 8 hours. [default: 28800]
   -d, --duration <DURATION>    The duration of time to simulate the lot for, in seconds. Defaults to 24 hours. [default: 86400]
+      --faithful               Uses an implementation that closely matches the description, rather than just a functionally identical one.
+                               This only exists for comparison purposes. It does not run in parallel.
   -h, --help                   Print help
   -V, --version                Print version
 ```

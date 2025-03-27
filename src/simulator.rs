@@ -9,7 +9,12 @@ enum Pdf {
     Continuous(TriangularPdfSampler),
 }
 
-pub struct Simulator<P: ParkingLot> {
+pub trait Simulator<P: ParkingLot> {
+    fn simulate<T: rand::Rng>(&mut self, rng: &mut T);
+    fn cars_left(&self) -> usize;
+}
+
+pub struct StandardSimulator<P: ParkingLot> {
     lot: P,
     clock: u32,
     steps: u32,
@@ -19,7 +24,7 @@ pub struct Simulator<P: ParkingLot> {
     cars_per_second: f32,
 }
 
-impl<P: ParkingLot> Simulator<P> {
+impl<P: ParkingLot> StandardSimulator<P> {
     pub fn new(
         lot: P,
         max_time: u32,
@@ -47,8 +52,10 @@ impl<P: ParkingLot> Simulator<P> {
             cars_per_second: cars_per_hour / 3600.0,
         }
     }
+}
 
-    pub fn simulate<T: rand::Rng>(&mut self, rng: &mut T) {
+impl<P: ParkingLot> Simulator<P> for StandardSimulator<P> {
+    fn simulate<T: rand::Rng>(&mut self, rng: &mut T) {
         while self.clock < self.steps {
             // Determine whether car likely arrives
             let car_arrived = random_generator::event_occurred(rng, self.cars_per_second);
@@ -104,7 +111,7 @@ impl<P: ParkingLot> Simulator<P> {
         }
     }
 
-    pub fn cars_left(&self) -> usize {
+    fn cars_left(&self) -> usize {
         self.incoming
     }
 }

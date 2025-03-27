@@ -1,5 +1,6 @@
 use clap::Parser;
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Parser)]
 #[command(version, about = "A Rust reimplementation of one of my assignments.", long_about = None)]
 pub struct Cli {
@@ -53,4 +54,10 @@ pub struct Cli {
         default_value_t = 86400
     )]
     pub duration: u32,
+    #[arg(
+        long,
+        help = "Uses an implementation that closely matches the description, rather than just a functionally identical one.\nThis only exists for comparison purposes. It does not run in parallel.",
+        conflicts_with_all(["continuous", "binary_search"])
+    )]
+    pub faithful: bool,
 }

@@ -12,11 +12,13 @@ use std::{
     time::Instant,
 };
 
+use faithful::FaithfulSimulator;
 #[allow(unused_imports)]
 use parking_lot::{ArrayParkingLot, VecParkingLot};
-use simulator::Simulator;
+use simulator::{Simulator, StandardSimulator};
 
 mod cli;
+mod faithful;
 mod parking_lot;
 mod random_generator;
 mod simulator;
@@ -87,7 +89,7 @@ fn par_simulate(cli: &cli::Cli) -> usize {
 
 fn par_simulate_capacity(capacity: usize, cli: &cli::Cli) -> f32 {
     let inner_loop = |rng: &mut rand::rngs::ThreadRng, i: u32| {
-        let mut sim = Simulator::new(
+        let mut sim = StandardSimulator::new(
             VecParkingLot::new(capacity),
             // ArrayParkingLot::new(capacity),
             cli.max_stay,
@@ -155,6 +157,43 @@ fn binary_search_simulate(cli: &cli::Cli) -> usize {
     low
 }
 
+fn faithful_simulate(cli: &cli::Cli) -> usize {
+    let mut rng = rand::rng();
+
+    for capacity in 1.. {
+        let mut final_size_sum = 0;
+
+        for i in 1..=cli.runs {
+            let mut sim = FaithfulSimulator::new(
+                VecParkingLot::new(capacity),
+                // ArrayParkingLot::new(capacity),
+                cli.max_stay,
+                cli.duration,
+                cli.cars_per_hour,
+            );
+            let start = Instant::now();
+            sim.simulate(&mut rng);
+            let end = Instant::now();
+            let runtime = end - start;
+
+            let cars_left = sim.cars_left();
+            final_size_sum += cars_left;
+
+            eprintln!(
+                "Capacity {capacity}, simulation run {i} ({} ms): Queue length at the end of simulation run: {cars_left}",
+                runtime.as_millis(),
+            );
+        }
+
+        let average = (final_size_sum as f32) / (cli.runs as f32);
+        if average <= cli.threshold {
+            return capacity;
+        }
+    }
+
+    unreachable!();
+}
+
 fn main() {
     let cli = cli::Cli::parse();
     assert!(
@@ -170,6 +209,8 @@ fn main() {
 
     let capacity = if cli.binary_search {
         binary_search_simulate(&cli)
+    } else if cli.faithful {
+        faithful_simulate(&cli)
     } else {
         par_simulate(&cli)
     };
