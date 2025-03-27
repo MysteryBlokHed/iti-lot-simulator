@@ -5,9 +5,7 @@ to code a parking lot simulator in Java.
 I thought that the assignment was rather poorly optimized,
 so I decided to rewrite it in Rust and see how performant I could get it.
 
-This repository just exists for me to track those changes separately,
-in a public repository so that it's easier to share without just opening
-the entire repository for that class's work.
+This isn't a particularly useful project—it's just a fun experiment for myself.
 
 ## Description
 
@@ -22,7 +20,7 @@ The max stay is 8 hours by default.
 The code that is prescribed to be run each tick is:
 
 1. Generate a random number to determine if a car should join the queue
-   (done by comparing a random number to the ratio $`\frac{\textrm{hourly cars}}{3600 \textrm{ seconds}}`$.
+   (done by comparing a random number to the ratio $`\frac{\textrm{hourly cars}}{3600 \textrm{ seconds}}`$).
    - If the rng returns true, add a car to the incoming queue.
 2. For each car currently in the lot:
    - Determine if the car should leave the lot by:
@@ -32,11 +30,13 @@ The code that is prescribed to be run each tick is:
 3. If the outgoing queue is not empty, pop one car.
 4. If the incoming queue is not empty, and there is space in the lot, move a car from the queue to the parked cars list.
 
-The default version of my code (no flags) is functionally identical to this description,
-but I have made some optimizations such as parallelizing the capacity checks,
-replacing the incoming queue with an integer counter,
-and removing the outgoing queue entirely.
+### Deviation from the Description
+
+The default version of the code (no flags) is functionally identical to this description,
+but I have made some optimizations such as parallelizing the simulations,
+replacing the incoming queue with an integer counter, and removing the outgoing queue entirely.
 If an implementation that is written as described above is desired, use the `--faithful` flag.
+(The faithful version also does _not_ run in parallel).
 
 Other performance optimizations may cause varying amounts of divergence from this implementation,
 most notably with the `-c` flag described below.
