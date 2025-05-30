@@ -141,7 +141,7 @@ fn binary_search_simulate(cli: &cli::Cli) -> usize {
     let mut mid;
 
     while low <= high {
-        mid = (high + low) / 2;
+        mid = usize::midpoint(high, low);
         // Run the simulation
         let average = par_simulate_capacity(mid, cli);
         let too_high = average <= cli.threshold;
