@@ -105,10 +105,12 @@ fn par_simulate_capacity(capacity: usize, cli: &cli::Cli) -> f32 {
 
         let cars_left = sim.cars_left();
 
-        eprintln!(
-            "Capacity {capacity}, simulation run {i} ({} ms): Queue length at the end of simulation run: {cars_left}",
-            runtime.as_millis(),
-        );
+        if cli.verbose {
+            eprintln!(
+                "Capacity {capacity}, simulation run {i} ({} ms): Queue length at the end of simulation run: {cars_left}",
+                runtime.as_millis(),
+            );
+        }
 
         cars_left
     };
@@ -179,10 +181,12 @@ fn faithful_simulate(cli: &cli::Cli) -> usize {
             let cars_left = sim.cars_left();
             final_size_sum += cars_left;
 
-            eprintln!(
-                "Capacity {capacity}, simulation run {i} ({} ms): Queue length at the end of simulation run: {cars_left}",
-                runtime.as_millis(),
-            );
+            if cli.verbose {
+                eprintln!(
+                    "Capacity {capacity}, simulation run {i} ({} ms): Queue length at the end of simulation run: {cars_left}",
+                    runtime.as_millis(),
+                );
+            }
         }
 
         let average = (final_size_sum as f32) / (cli.runs as f32);

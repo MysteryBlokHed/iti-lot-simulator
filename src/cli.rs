@@ -55,6 +55,12 @@ pub struct Cli {
     )]
     pub duration: u32,
     #[arg(
+        short,
+        long,
+        help = "Prints information about each simulation run rather than just the final result."
+    )]
+    pub verbose: bool,
+    #[arg(
         long,
         help = "Uses an implementation that closely matches the description, rather than just a functionally identical one.\nThis only exists for comparison purposes. It does not run in parallel.",
         conflicts_with_all(["continuous", "binary_search"])
