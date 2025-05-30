@@ -72,18 +72,19 @@ A Rust reimplementation of one of my assignments.
 Usage: iti-lot-simulator [OPTIONS] <CARS_PER_HOUR>
 
 Arguments:
-  <CARS_PER_HOUR>  The number of cars that should enter the lot per hour. Must be positive.
+  <CARS_PER_HOUR>  The number of cars that should enter the lot per hour. Must be positive
 
 Options:
-  -r, --runs <RUNS>            The number of runs to do per capacity. More runs will take longer but produce more stable results. [default: 10]
-  -t, --threshold <THRESHOLD>  The maximum number of cars that are allowed to be waiting to enter in order for a capacity to be considered acceptable. [default: 5]
-  -c, --continuous             Use a continuous probability sampling method that is faster and actually correct.
-  -s, --skew                   For use with --continuous. Determines whether the random number generator should be skewed to somewhat match the incorrect discrete probabilities.
-  -b, --binary-search          Uses a binary search approach to determine the best capacity, instead of just increasing by one constantly.
-  -m, --max-stay <MAX_STAY>    The maximum amount of time a car will stay in the lot, in seconds. Defaults to 8 hours. [default: 28800]
-  -d, --duration <DURATION>    The duration of time to simulate the lot for, in seconds. Defaults to 24 hours. [default: 86400]
-      --faithful               Uses an implementation that closely matches the description, rather than just a functionally identical one.
-                               This only exists for comparison purposes. It does not run in parallel.
+  -r, --runs <RUNS>            The number of runs to do per capacity. More runs will take longer but produce more stable results [default: 10]
+  -t, --threshold <THRESHOLD>  The maximum number of cars that are allowed to be waiting to enter in order for a capacity to be considered acceptable [default: 5]
+  -c, --continuous             Use a continuous probability sampling method that is faster and actually correct
+  -s, --skew                   For use with --continuous. Determines whether the random number generator should be skewed to somewhat match the incorrect discrete probabilities
+  -b, --binary-search          Uses a binary search approach to determine the best capacity, instead of just increasing by one constantly
+  -m, --max-stay <MAX_STAY>    The maximum amount of time a car will stay in the lot, in seconds. Defaults to 8 hours [default: 28800]
+  -d, --duration <DURATION>    The duration of time to simulate the lot for, in seconds. Defaults to 24 hours [default: 86400]
+  -v, --verbose                Prints information about each simulation run rather than just the final result
+      --faithful               Uses an implementation that closely matches the assignment description, rather than just a functionally identical one.
+                               This only exists as a baseline to compare how much more performant the optimized code is
   -h, --help                   Print help
   -V, --version                Print version
 ```
