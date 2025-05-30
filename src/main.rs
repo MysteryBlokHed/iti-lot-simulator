@@ -8,8 +8,7 @@
 use clap::Parser;
 use rayon::prelude::*;
 use std::{
-    sync::{Arc, Mutex, RwLock},
-    time::Instant,
+    io::Write, sync::{Arc, Mutex, RwLock}, time::Instant
 };
 
 use faithful::FaithfulSimulator;
@@ -222,8 +221,12 @@ fn main() {
     let end_time = Instant::now();
     let runtime = end_time - start_time;
 
-    eprintln!(
-        "\nSIMULATION IS COMPLETE!\nThe smallest number of parking spots required: {capacity}\nTotal execution time: {:.3} seconds",
-        runtime.as_secs_f32(),
-    );
+    // Send the final capacity to stdout and the rest of the text to stderr.
+    // Also flushes buffers to make sure that the text appears in the right order
+    std::io::stdout().flush().unwrap();
+    eprint!("\nSIMULATION IS COMPLETE!\nThe smallest number of parking spots required: ");
+    std::io::stderr().flush().unwrap();
+    print!("{capacity}");
+    std::io::stdout().flush().unwrap();
+    eprintln!("\nTotal execution time: {:.3} seconds", runtime.as_secs_f32());
 }
