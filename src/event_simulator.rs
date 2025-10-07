@@ -1,13 +1,10 @@
 use std::{cmp::Reverse, collections::BinaryHeap};
 
-use crate::{
-    parking_lot::{CounterParkingLot, ParkingLot},
-    simulator::Simulator,
-    triangular_distribution::TriangularPdfSampler,
-};
+use crate::{simulator::Simulator, triangular_distribution::TriangularPdfSampler};
 
 pub struct EventSimulator {
-    lot: CounterParkingLot,
+    occupancy: usize,
+    capacity: usize,
     clock: u32,
     steps: u32,
     arrival_times: Vec<u32>,
@@ -28,7 +25,8 @@ impl EventSimulator {
         rng: &mut R,
     ) -> Self {
         let mut sim = Self {
-            lot: CounterParkingLot::new(capacity),
+            occupancy: 0,
+            capacity,
             steps,
             clock: 0,
             arrival_times: Vec::new(),
@@ -67,12 +65,17 @@ impl EventSimulator {
         }
     }
 
+    fn can_park(&self) -> bool {
+        self.occupancy != self.capacity
+    }
+
     /// Generates a departure time for a car, add it to the [`Self::departure_times`] list.
     /// Does **not** change [`Self::incoming`].
+    /// This function assumes that the caller has already checked that the lot is not full.
     fn park_car<R: rand::Rng>(&mut self, rng: &mut R) {
         // Generate a departure time and add it to the heap
         let departure_time = self.clock + self.pdf.sample(rng);
-        let _ = self.lot.try_park(departure_time);
+        self.occupancy += 1;
         self.departure_times.push(Reverse(departure_time));
     }
 
@@ -84,7 +87,7 @@ impl EventSimulator {
             }
 
             self.departure_times.pop();
-            self.lot.remove_index(0);
+            self.occupancy -= 1;
         }
     }
 }
@@ -141,12 +144,12 @@ impl Simulator for EventSimulator {
             }
 
             // Park a car in the queue if there is space
-            if self.incoming != 0 && self.lot.can_park() {
+            if self.incoming != 0 && self.can_park() {
                 self.park_car(rng);
                 self.incoming -= 1;
                 // If there are more cars and we have space for them to park,
                 // set this flag so that we don't accidentally skip too much time
-                cars_can_park = self.incoming != 0 && self.lot.can_park();
+                cars_can_park = self.incoming != 0 && self.can_park();
             }
         }
     }
