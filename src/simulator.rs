@@ -9,7 +9,7 @@ enum Pdf {
     Continuous(TriangularPdfSampler),
 }
 
-pub trait Simulator<P: ParkingLot> {
+pub trait Simulator {
     fn simulate<T: rand::Rng>(&mut self, rng: &mut T);
     fn cars_left(&self) -> usize;
 }
@@ -54,7 +54,7 @@ impl<P: ParkingLot> StandardSimulator<P> {
     }
 }
 
-impl<P: ParkingLot> Simulator<P> for StandardSimulator<P> {
+impl<P: ParkingLot> Simulator for StandardSimulator<P> {
     fn simulate<T: rand::Rng>(&mut self, rng: &mut T) {
         while self.clock < self.steps {
             // Determine whether car likely arrives

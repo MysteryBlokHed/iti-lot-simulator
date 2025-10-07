@@ -89,7 +89,7 @@ impl EventSimulator {
     }
 }
 
-impl Simulator<CounterParkingLot> for EventSimulator {
+impl Simulator for EventSimulator {
     fn simulate<T: rand::Rng>(&mut self, rng: &mut T) {
         // Whether there are currently any queued cars, and the lot has space for them to park.
         // Used to make sure that we don't skip time when there is an empty spot available
