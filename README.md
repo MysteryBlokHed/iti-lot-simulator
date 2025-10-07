@@ -39,7 +39,7 @@ If an implementation that is written as described above is desired, use the `--f
 (The faithful version also does _not_ run in parallel).
 
 Other performance optimizations may cause varying amounts of divergence from this implementation,
-most notably with the `-c` flag described below.
+most notably with the `-c` and `-e` flags described below.
 
 ### Probability Errors
 
@@ -50,6 +50,15 @@ A continuous flag (`-c`) is available for a more performant and more correct sim
 Since the cars leave at the proper time, the calculated lot size will be smaller than the default version.
 The RNG for this version can be skewed (`-s`) to somewhat replicate the distribution
 of the original probability method.
+
+### Event-Based Simulation
+
+One might notice that the simulation has a pretty substantial number of RNG calls.
+In particular, a random number is sampled every single tick to determine whether a car will arrive.
+Instead, we can just use a geometric distribution to pre-compute every arrival time for cars,
+and then skip time in our simulation when no events are happening.
+
+This method leads to the most significant performance gains compared to any other methods.
 
 ## Building
 
@@ -78,6 +87,7 @@ Options:
   -r, --runs <RUNS>            The number of runs to do per capacity. More runs will take longer but produce more stable results [default: 10]
   -t, --threshold <THRESHOLD>  The maximum number of cars that are allowed to be waiting to enter in order for a capacity to be considered acceptable [default: 5]
   -c, --continuous             Use a continuous probability sampling method that is faster and actually correct
+  -e, --event-based            Instead of simulating every single tick, precompute the arrival and departure times, and then jump to the target simulation times. This flag implies --continuous
   -s, --skew                   For use with --continuous. Determines whether the random number generator should be skewed to somewhat match the incorrect discrete probabilities
   -b, --binary-search          Uses a binary search approach to determine the best capacity, instead of just increasing by one constantly
   -m, --max-stay <MAX_STAY>    The maximum amount of time a car will stay in the lot, in seconds. Defaults to 8 hours [default: 28800]
@@ -105,12 +115,29 @@ The smallest number of parking spots required: 57
 Total execution time: 0.029 seconds
 ```
 
+```sh
+$ cargo run --release -- 1000 -cb
+
+SIMULATION IS COMPLETE!
+The smallest number of parking spots required: 4085
+Total execution time: 3.036 seconds
+```
+
+```sh
+$ cargo run --release -- 1000 -be
+
+SIMULATION IS COMPLETE!
+The smallest number of parking spots required: 4089
+Total execution time: 0.031 seconds
+```
+
 ## Benchmarks
 
 If you want to see how the different versions compare, you can use `cargo bench`.
 To see all available benchmarks, run `cargo bench -- --list`.
 
-Run `cargo bench defaults/` to see how the five basic variations (i.e. `--faithful`, no flags, `-c`, `-b`, and `-bc`)
+Run `cargo bench defaults/` to see how the seven basic variations
+(i.e. `--faithful`, no flags, `-c`, `-b`, `-bc`, `-e`, `-be`)
 compare for 3 cars per hour.
 
 Run `cargo bench fifty/` to see how the versions other than faithful compare for 50 cars per hour.

@@ -31,7 +31,7 @@ impl<P: ParkingLot> FaithfulSimulator<P> {
     }
 }
 
-impl<P: ParkingLot> Simulator<P> for FaithfulSimulator<P> {
+impl<P: ParkingLot> Simulator for FaithfulSimulator<P> {
     fn simulate<T: rand::Rng>(&mut self, rng: &mut T) {
         while self.clock < self.steps {
             // Determine whether car likely arrives
