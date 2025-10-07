@@ -18,7 +18,10 @@ use faithful::FaithfulSimulator;
 use parking_lot::{ArrayParkingLot, VecParkingLot};
 use simulator::{Simulator, StandardSimulator};
 
+use crate::event_simulator::EventSimulator;
+
 mod cli;
+mod event_simulator;
 mod faithful;
 mod parking_lot;
 mod random_generator;
@@ -90,21 +93,36 @@ fn par_simulate(cli: &cli::Cli) -> usize {
 
 fn par_simulate_capacity(capacity: usize, cli: &cli::Cli) -> f32 {
     let inner_loop = |rng: &mut rand::rngs::ThreadRng, i: u32| {
-        let mut sim = StandardSimulator::new(
-            VecParkingLot::new(capacity),
-            // ArrayParkingLot::new(capacity),
-            cli.max_stay,
-            cli.duration,
-            cli.cars_per_hour,
-            cli.continuous,
-            cli.skew,
-        );
-        let start = Instant::now();
-        sim.simulate(rng);
-        let end = Instant::now();
-        let runtime = end - start;
+        let (start, end, cars_left) = if cli.event_based {
+            let mut sim = EventSimulator::new(
+                capacity,
+                cli.max_stay,
+                cli.duration,
+                cli.cars_per_hour,
+                cli.skew,
+                rng,
+            );
+            let start = Instant::now();
+            sim.simulate(rng);
+            let end = Instant::now();
+            (start, end, sim.cars_left())
+        } else {
+            let mut sim = StandardSimulator::new(
+                VecParkingLot::new(capacity),
+                // ArrayParkingLot::new(capacity),
+                cli.max_stay,
+                cli.duration,
+                cli.cars_per_hour,
+                cli.continuous,
+                cli.skew,
+            );
+            let start = Instant::now();
+            sim.simulate(rng);
+            let end = Instant::now();
+            (start, end, sim.cars_left())
+        };
 
-        let cars_left = sim.cars_left();
+        let runtime = end - start;
 
         if cli.verbose {
             eprintln!(

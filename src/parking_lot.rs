@@ -1,3 +1,5 @@
+use std::iter;
+
 use crate::MAX_CAPACITY;
 
 pub type Spot = u32;
@@ -10,6 +12,55 @@ pub trait ParkingLot {
     fn get_occupancy(&self) -> usize;
     fn remove_index(&mut self, index: usize) -> Spot;
     fn iter(&self) -> impl Iterator<Item = &Spot>;
+}
+
+/// Parking lot that simply counts the number of active cars in the lot.
+/// Useful for any simulators that decide to manage their own car state.
+/// All spots returned will always be zero.
+pub struct CounterParkingLot {
+    pub occupancy: usize,
+    pub capacity: usize,
+}
+
+impl CounterParkingLot {
+    pub fn new(capacity: usize) -> Self {
+        Self {
+            occupancy: 0,
+            capacity,
+        }
+    }
+}
+
+impl ParkingLot for CounterParkingLot {
+    #[inline]
+    fn can_park(&self) -> bool {
+        self.occupancy != self.capacity
+    }
+
+    #[inline]
+    fn try_park(&mut self, _timestamp: u32) -> bool {
+        if !self.can_park() {
+            return false;
+        };
+        self.occupancy += 1;
+        true
+    }
+
+    #[inline]
+    fn get_occupancy(&self) -> usize {
+        self.occupancy
+    }
+
+    #[inline]
+    fn remove_index(&mut self, _index: usize) -> Spot {
+        self.occupancy = self.occupancy.saturating_sub(1);
+        0
+    }
+
+    #[inline]
+    fn iter(&self) -> impl Iterator<Item = &Spot> {
+        iter::repeat_n(&0, self.occupancy)
+    }
 }
 
 /// Parking lot implementation that uses a [`Vec`] for its lot.

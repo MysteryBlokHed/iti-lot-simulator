@@ -24,6 +24,15 @@ pub struct Cli {
     #[arg(short, long)]
     pub continuous: bool,
 
+    /// Instead of simulating every single tick, precompute the arrival and departure times,
+    /// and then jump to the target simulation times.
+    /// This flag implies --continuous.
+    #[arg(
+        short,
+        long
+    )]
+    pub event_based: bool,
+
     /// For use with --continuous. Determines whether the random number generator should be skewed to somewhat match the incorrect discrete probabilities.
     #[arg(short, long, requires = "continuous")]
     pub skew: bool,
