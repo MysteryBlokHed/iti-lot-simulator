@@ -8,7 +8,9 @@
 use clap::Parser;
 use rayon::prelude::*;
 use std::{
-    io::Write, sync::{Arc, Mutex, RwLock}, time::Instant
+    io::Write,
+    sync::{Arc, Mutex, RwLock},
+    time::Instant,
 };
 
 use faithful::FaithfulSimulator;
@@ -228,5 +230,8 @@ fn main() {
     std::io::stderr().flush().unwrap();
     print!("{capacity}");
     std::io::stdout().flush().unwrap();
-    eprintln!("\nTotal execution time: {:.3} seconds", runtime.as_secs_f32());
+    eprintln!(
+        "\nTotal execution time: {:.3} seconds",
+        runtime.as_secs_f32()
+    );
 }

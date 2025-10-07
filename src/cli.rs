@@ -17,56 +17,31 @@ pub struct Cli {
     pub runs: u32,
 
     /// The maximum number of cars that are allowed to be waiting to enter in order for a capacity to be considered acceptable.
-    #[arg(
-        short,
-        long,
-        default_value_t = 5.0
-    )]
+    #[arg(short, long, default_value_t = 5.0)]
     pub threshold: f32,
 
     /// Use a continuous probability sampling method that is faster and actually correct.
-    #[arg(
-        short,
-        long
-    )]
+    #[arg(short, long)]
     pub continuous: bool,
 
     /// For use with --continuous. Determines whether the random number generator should be skewed to somewhat match the incorrect discrete probabilities.
-    #[arg(
-        short,
-        long,
-        requires = "continuous"
-    )]
+    #[arg(short, long, requires = "continuous")]
     pub skew: bool,
 
     /// Uses a binary search approach to determine the best capacity, instead of just increasing by one constantly.
-    #[arg(
-        short,
-        long
-    )]
+    #[arg(short, long)]
     pub binary_search: bool,
 
     /// The maximum amount of time a car will stay in the lot, in seconds. Defaults to 8 hours.
-    #[arg(
-        short,
-        long,
-        default_value_t = 28800
-    )]
+    #[arg(short, long, default_value_t = 28800)]
     pub max_stay: u32,
 
     /// The duration of time to simulate the lot for, in seconds. Defaults to 24 hours.
-    #[arg(
-        short,
-        long,
-        default_value_t = 86400
-    )]
+    #[arg(short, long, default_value_t = 86400)]
     pub duration: u32,
 
     /// Prints information about each simulation run rather than just the final result.
-    #[arg(
-        short,
-        long
-    )]
+    #[arg(short, long)]
     pub verbose: bool,
 
     /// Uses an implementation that closely matches the assignment description, rather than just a functionally identical one.
