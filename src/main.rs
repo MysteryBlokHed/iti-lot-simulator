@@ -69,8 +69,9 @@ fn par_simulate_inner(
     smallest: &Arc<Mutex<usize>>,
     done: &Arc<RwLock<bool>>,
     capacity: usize,
+    parallel: bool,
 ) {
-    let average = par_simulate_capacity(capacity, cli);
+    let average = simulate_capacity(capacity, cli, parallel);
     if average <= cli.threshold {
         *done.write().unwrap() = true;
         let mut smallest = smallest.lock().unwrap();
@@ -80,18 +81,25 @@ fn par_simulate_inner(
     }
 }
 
-fn par_simulate(cli: &cli::Cli) -> usize {
+fn simulate(cli: &cli::Cli, inner_parallel: bool) -> usize {
     let smallest = Arc::new(Mutex::new(usize::MAX));
     let iter = IterUntilDone::new(1..);
     let done = iter.done.clone();
 
-    iter.par_bridge()
-        .for_each(|capacity| par_simulate_inner(cli, &smallest.clone(), &done.clone(), capacity));
+    iter.par_bridge().for_each(|capacity| {
+        par_simulate_inner(
+            cli,
+            &smallest.clone(),
+            &done.clone(),
+            capacity,
+            inner_parallel,
+        );
+    });
 
     *smallest.lock().unwrap()
 }
 
-fn par_simulate_capacity(capacity: usize, cli: &cli::Cli) -> f32 {
+fn simulate_capacity(capacity: usize, cli: &cli::Cli, parallel: bool) -> f32 {
     let inner_loop = |rng: &mut rand::rngs::ThreadRng, i: u32| {
         let (start, end, cars_left) = if cli.event_based {
             let mut sim = EventSimulator::new(
@@ -134,10 +142,17 @@ fn par_simulate_capacity(capacity: usize, cli: &cli::Cli) -> f32 {
         cars_left
     };
 
-    let final_size_sum = (1..=cli.runs)
-        .into_par_iter()
-        .map_init(rand::rng, inner_loop)
-        .sum::<usize>();
+    let final_size_sum = if parallel {
+        (1..=cli.runs)
+            .into_par_iter()
+            .map_init(rand::rng, inner_loop)
+            .sum::<usize>()
+    } else {
+        let mut rng = rand::rng();
+        (1..=cli.runs)
+            .map(|n| inner_loop(&mut rng, n))
+            .sum::<usize>()
+    };
 
     (final_size_sum as f32) / (cli.runs as f32)
 }
@@ -146,7 +161,7 @@ fn binary_search_simulate(cli: &cli::Cli) -> usize {
     // Start by doubling the tested capacity until we reach one that works
     let mut upper_bound = 1usize;
     loop {
-        let average = par_simulate_capacity(upper_bound, cli);
+        let average = simulate_capacity(upper_bound, cli, true);
         if average <= cli.threshold {
             break;
         }
@@ -163,7 +178,7 @@ fn binary_search_simulate(cli: &cli::Cli) -> usize {
     while low <= high {
         mid = usize::midpoint(high, low);
         // Run the simulation
-        let average = par_simulate_capacity(mid, cli);
+        let average = simulate_capacity(mid, cli, true);
         let too_high = average <= cli.threshold;
 
         // Try smaller capacities if we overestimated, larger if we underestimated
@@ -235,7 +250,7 @@ fn main() {
     } else if cli.faithful {
         faithful_simulate(&cli)
     } else {
-        par_simulate(&cli)
+        simulate(&cli, !cli.event_based)
     };
 
     let end_time = Instant::now();
