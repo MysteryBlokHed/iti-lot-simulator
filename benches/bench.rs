@@ -19,8 +19,10 @@ fn defaults(c: &mut Criterion) {
     run_with_args!(group, "faithful", &["3", "--faithful"]);
     run_with_args!(group, "standard", &["3"]);
     run_with_args!(group, "continuous", &["3", "-c"]);
+    run_with_args!(group, "continuous_heap", &["3", "-cp"]);
     run_with_args!(group, "standard_binary_search", &["3", "-b"]);
     run_with_args!(group, "continuous_binary_search", &["3", "-bc"]);
+    run_with_args!(group, "continuous_heap_binary_search", &["3", "-bcp"]);
     run_with_args!(group, "event_based", &["3", "-e"]);
     run_with_args!(group, "event_based_binary_search", &["3", "-be"]);
     group.finish();
@@ -30,8 +32,10 @@ fn fifty(c: &mut Criterion) {
     let mut group = c.benchmark_group("fifty");
     run_with_args!(group, "standard", &["50"]);
     run_with_args!(group, "continuous", &["50", "-c"]);
+    run_with_args!(group, "continuous_heap", &["50", "-cp"]);
     run_with_args!(group, "standard_binary_search", &["50", "-b"]);
     run_with_args!(group, "continuous_binary_search", &["50", "-bc"]);
+    run_with_args!(group, "continuous_heap_binary_search", &["50", "-bcp"]);
     run_with_args!(group, "event_based", &["50", "-e"]);
     run_with_args!(group, "event_based_binary_search", &["50", "-be"]);
     group.finish();
