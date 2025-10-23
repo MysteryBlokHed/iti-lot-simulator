@@ -18,9 +18,10 @@ use faithful::FaithfulSimulator;
 use parking_lot::{ArrayParkingLot, VecParkingLot};
 use simulator::{Simulator, StandardSimulator};
 
-use crate::event_simulator::EventSimulator;
+use crate::{continuous_simulator::ContinuousHeapSimulator, event_simulator::EventSimulator};
 
 mod cli;
+mod continuous_simulator;
 mod event_simulator;
 mod faithful;
 mod parking_lot;
@@ -109,6 +110,18 @@ fn simulate_capacity(capacity: usize, cli: &cli::Cli, parallel: bool) -> f32 {
                 cli.cars_per_hour,
                 cli.skew,
                 rng,
+            );
+            let start = Instant::now();
+            sim.simulate(rng);
+            let end = Instant::now();
+            (start, end, sim.cars_left())
+        } else if cli.continuous_heap {
+            let mut sim = ContinuousHeapSimulator::new(
+                capacity,
+                cli.max_stay,
+                cli.duration,
+                cli.cars_per_hour,
+                cli.skew,
             );
             let start = Instant::now();
             sim.simulate(rng);
