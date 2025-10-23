@@ -24,6 +24,11 @@ pub struct Cli {
     #[arg(short, long)]
     pub continuous: bool,
 
+    /// Use a heap-based structure for the continuous probability method.
+    /// This flag implies --continuous.
+    #[arg(short = 'p', long, conflicts_with = "event_based")]
+    pub continuous_heap: bool,
+
     /// Instead of simulating every single tick, precompute the arrival and departure times,
     /// and then jump to the target simulation times.
     /// This flag implies --continuous.
