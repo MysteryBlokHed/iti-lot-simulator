@@ -51,6 +51,16 @@ Since the cars leave at the proper time, the calculated lot size will be smaller
 The RNG for this version can be skewed (`-s`) to somewhat replicate the distribution
 of the original probability method.
 
+### Heap-Based Departures
+
+In the continuous version of the code, the departure times are all precomputed.
+All we need to do each tick is to simply check whether there are any cars
+that need to be removed from the lot by checking if the smallest departure time
+is equal to the current tick.
+This is a natural use case for a min-heap, so that's what the `-p` flag uses.
+
+This change provided one of the most significant speedups.
+
 ### Event-Based Simulation
 
 One might notice that the simulation has a pretty substantial number of RNG calls.
@@ -58,7 +68,7 @@ In particular, a random number is sampled every single tick to determine whether
 Instead, we can just use a geometric distribution to pre-compute every arrival time for cars,
 and then skip time in our simulation when no events are happening.
 
-This method leads to the most significant performance gains compared to any other methods.
+This optimization provides a _slight_ speed boost on top of using a heap for departures.
 
 ## Building
 
@@ -87,6 +97,7 @@ Options:
   -r, --runs <RUNS>            The number of runs to do per capacity. More runs will take longer but produce more stable results [default: 10]
   -t, --threshold <THRESHOLD>  The maximum number of cars that are allowed to be waiting to enter in order for a capacity to be considered acceptable [default: 5]
   -c, --continuous             Use a continuous probability sampling method that is faster and actually correct
+  -p, --continuous-heap        Use a heap-based structure for the continuous probability method. This flag implies --continuous
   -e, --event-based            Instead of simulating every single tick, precompute the arrival and departure times, and then jump to the target simulation times. This flag implies --continuous
   -s, --skew                   For use with --continuous. Determines whether the random number generator should be skewed to somewhat match the incorrect discrete probabilities
   -b, --binary-search          Uses a binary search approach to determine the best capacity, instead of just increasing by one constantly
@@ -136,8 +147,8 @@ Total execution time: 0.031 seconds
 If you want to see how the different versions compare, you can use `cargo bench`.
 To see all available benchmarks, run `cargo bench -- --list`.
 
-Run `cargo bench defaults/` to see how the seven basic variations
-(i.e. `--faithful`, no flags, `-c`, `-b`, `-bc`, `-e`, `-be`)
+Run `cargo bench defaults/` to see how the nine variations
+(i.e. `--faithful`, no flags, `-c`, `-cp`, `-b`, `-bc`, `-bcp`, `-e`, `-be`)
 compare for 3 cars per hour.
 
 Run `cargo bench fifty/` to see how the versions other than faithful compare for 50 cars per hour.
