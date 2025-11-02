@@ -9,7 +9,10 @@ use clap::Parser;
 use rayon::prelude::*;
 use std::{
     io::Write,
-    sync::{Arc, Mutex, RwLock},
+    sync::{
+        Arc,
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+    },
     time::Instant,
 };
 
@@ -40,14 +43,14 @@ pub const MAX_CAPACITY: usize = 512;
 /// in case they find a smaller capacity that also works,
 /// in which case that smaller capacity will be the one returned as a final answer.
 struct IterUntilDone<I: Iterator<Item = usize>> {
-    done: Arc<RwLock<bool>>,
+    done: Arc<AtomicBool>,
     iterator: I,
 }
 
 impl<I: Iterator<Item = usize>> IterUntilDone<I> {
     fn new(iterator: I) -> Self {
         Self {
-            done: Arc::new(RwLock::new(false)),
+            done: Arc::new(AtomicBool::new(false)),
             iterator,
         }
     }
@@ -57,7 +60,7 @@ impl<I: Iterator<Item = usize>> Iterator for IterUntilDone<I> {
     type Item = usize;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if *self.done.read().unwrap() {
+        if self.done.load(Ordering::Relaxed) {
             return None;
         }
 
@@ -67,37 +70,30 @@ impl<I: Iterator<Item = usize>> Iterator for IterUntilDone<I> {
 
 fn par_simulate_inner(
     cli: &cli::Cli,
-    smallest: &Arc<Mutex<usize>>,
-    done: &Arc<RwLock<bool>>,
+    smallest: &AtomicUsize,
+    done: &AtomicBool,
     capacity: usize,
     parallel: bool,
 ) {
     let average = simulate_capacity(capacity, cli, parallel);
     if average <= cli.threshold {
-        *done.write().unwrap() = true;
-        let mut smallest = smallest.lock().unwrap();
-        if capacity < *smallest {
-            *smallest = capacity;
-        }
+        // Make the iterator stop producing new values
+        done.store(true, Ordering::Relaxed);
+        // Update the smallest lot size
+        smallest.fetch_min(capacity, Ordering::Relaxed);
     }
 }
 
 fn simulate(cli: &cli::Cli, inner_parallel: bool) -> usize {
-    let smallest = Arc::new(Mutex::new(usize::MAX));
+    let smallest = Arc::new(AtomicUsize::new(usize::MAX));
     let iter = IterUntilDone::new(1..);
-    let done = iter.done.clone();
+    let done = Arc::clone(&iter.done);
 
     iter.par_bridge().for_each(|capacity| {
-        par_simulate_inner(
-            cli,
-            &smallest.clone(),
-            &done.clone(),
-            capacity,
-            inner_parallel,
-        );
+        par_simulate_inner(cli, &smallest, &done, capacity, inner_parallel);
     });
 
-    *smallest.lock().unwrap()
+    smallest.load(Ordering::Relaxed)
 }
 
 fn simulate_capacity(capacity: usize, cli: &cli::Cli, parallel: bool) -> f32 {
