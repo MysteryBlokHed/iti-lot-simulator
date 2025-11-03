@@ -9,10 +9,7 @@ use clap::Parser;
 use rayon::prelude::*;
 use std::{
     io::Write,
-    sync::{
-        Arc,
-        atomic::{AtomicBool, AtomicUsize, Ordering},
-    },
+    sync::atomic::{AtomicBool, AtomicUsize, Ordering},
     time::Instant,
 };
 
@@ -42,21 +39,18 @@ pub const MAX_CAPACITY: usize = 512;
 /// Any ongoing iterations will be allowed to continue
 /// in case they find a smaller capacity that also works,
 /// in which case that smaller capacity will be the one returned as a final answer.
-struct IterUntilDone<I: Iterator<Item = usize>> {
-    done: Arc<AtomicBool>,
+struct IterUntilDone<'a, I: Iterator<Item = usize>> {
+    done: &'a AtomicBool,
     iterator: I,
 }
 
-impl<I: Iterator<Item = usize>> IterUntilDone<I> {
-    fn new(iterator: I) -> Self {
-        Self {
-            done: Arc::new(AtomicBool::new(false)),
-            iterator,
-        }
+impl<'a, I: Iterator<Item = usize>> IterUntilDone<'a, I> {
+    fn new(iterator: I, done: &'a AtomicBool) -> Self {
+        Self { done, iterator }
     }
 }
 
-impl<I: Iterator<Item = usize>> Iterator for IterUntilDone<I> {
+impl<I: Iterator<Item = usize>> Iterator for IterUntilDone<'_, I> {
     type Item = usize;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -85,9 +79,9 @@ fn par_simulate_inner(
 }
 
 fn simulate(cli: &cli::Cli, inner_parallel: bool) -> usize {
-    let smallest = Arc::new(AtomicUsize::new(usize::MAX));
-    let iter = IterUntilDone::new(1..);
-    let done = Arc::clone(&iter.done);
+    let smallest = AtomicUsize::new(usize::MAX);
+    let done = AtomicBool::new(false);
+    let iter = IterUntilDone::new(1.., &done);
 
     iter.par_bridge().for_each(|capacity| {
         par_simulate_inner(cli, &smallest, &done, capacity, inner_parallel);
